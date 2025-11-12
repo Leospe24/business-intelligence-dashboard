@@ -16,7 +16,11 @@ const TOKEN_EXPIRY = '1h';
 
 // Apply CORS Middleware with proper configuration
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://frontend:5173'],
+  origin: [
+    'http://localhost:3000', 
+    'http://localhost:5173',
+    'https://your-netlify-app.netlify.app'  // Will update after Netlify deploy
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -25,13 +29,10 @@ app.use(cors({
 // Apply body-parser
 app.use(bodyParser.json());
 
-// Database Pool (Guaranteed to connect internally using 'db:5432')
+// Database Pool - supports both local dev and Render production
 const pool = new Pool({
-    user: process.env.POSTGRES_USER || 'postgres',
-    host: process.env.POSTGRES_HOST || 'db', 
-    database: process.env.POSTGRES_DB || 'dashboard_db',
-    password: process.env.POSTGRES_PASSWORD || 'devpassword',
-    port: parseInt(process.env.POSTGRES_PORT || '5432'),
+    connectionString: process.env.DATABASE_URL || `postgresql://${process.env.POSTGRES_USER || 'postgres'}:${process.env.POSTGRES_PASSWORD || 'devpassword'}@${process.env.POSTGRES_HOST || 'db'}:${process.env.POSTGRES_PORT || '5432'}/${process.env.POSTGRES_DB || 'dashboard_db'}`,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // --- UTILITY FUNCTIONS ---
