@@ -30,10 +30,27 @@ app.use(cors({
 app.use(bodyParser.json());
 
 // Database Pool - supports both local dev and Render production
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || `postgresql://${process.env.POSTGRES_USER || 'postgres'}:${process.env.POSTGRES_PASSWORD || 'devpassword'}@${process.env.POSTGRES_HOST || 'db'}:${process.env.POSTGRES_PORT || '5432'}/${process.env.POSTGRES_DB || 'dashboard_db'}`,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// Database Pool - supports both local dev and Render production
+let connectionConfig;
+
+if (process.env.DATABASE_URL) {
+  // Production (Render) - use DATABASE_URL
+  connectionConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  };
+} else {
+  // Local development - use individual env vars
+  connectionConfig = {
+    user: process.env.POSTGRES_USER || 'postgres',
+    host: process.env.POSTGRES_HOST || 'db', 
+    database: process.env.POSTGRES_DB || 'dashboard_db',
+    password: process.env.POSTGRES_PASSWORD || 'devpassword',
+    port: parseInt(process.env.POSTGRES_PORT || '5432'),
+  };
+}
+
+const pool = new Pool(connectionConfig);
 
 // --- UTILITY FUNCTIONS ---
 
