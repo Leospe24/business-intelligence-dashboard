@@ -1,0 +1,374 @@
+Frontend Requirements & Specifications
+🎯 Project Overview
+Project Name: Business Intelligence Dashboard
+Frontend Role: Data Visualization & User Interaction Layer
+Tech Stack: React + TypeScript + Modern UI Library
+
+📋 Frontend Responsibilities
+Core Functions
+Data Visualization - Render charts, graphs, and KPIs
+
+User Interaction - Handle filters, date ranges, UI controls
+
+Data Fetching - Communicate with Python backend API
+
+Responsive Design - Work on desktop/tablet/mobile
+
+Error Handling - Manage loading states and API errors
+
+🛠 Technical Stack Requirements
+Required Dependencies
+json
+{
+  "react": "^18.2.0",
+  "react-dom": "^18.2.0",
+  "typescript": "^5.0.0",
+  "axios": "^1.5.0",  // API calls
+  "recharts": "^2.8.0",  // Charts
+  "react-query": "^3.39.3",  // Data fetching
+  "@mui/material": "^5.14.0",  // UI components
+  "@emotion/react": "^11.11.0",
+  "@emotion/styled": "^11.11.0",
+  "date-fns": "^2.30.0"  // Date handling
+}
+Development Dependencies
+json
+{
+  "@types/react": "^18.2.0",
+  "@types/react-dom": "^18.2.0",
+  "vite": "^4.4.0",  // Build tool (faster than Create React App)
+  "eslint": "^8.48.0",
+  "prettier": "^3.0.0"
+}
+📁 Project Structure
+text
+dashboard-frontend/
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+├── src/
+│   ├── components/
+│   │   ├── charts/
+│   │   │   ├── LineChart.tsx
+│   │   │   ├── BarChart.tsx
+│   │   │   ├── PieChart.tsx
+│   │   │   └── KpiCard.tsx
+│   │   ├── filters/
+│   │   │   ├── DateRangePicker.tsx
+│   │   │   ├── CategoryFilter.tsx
+│   │   │   └── FilterPanel.tsx
+│   │   ├── layout/
+│   │   │   ├── Header.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   └── MainLayout.tsx
+│   │   └── ui/
+│   │       ├── LoadingSpinner.tsx
+│   │       ├── ErrorBoundary.tsx
+│   │       └── PageHeader.tsx
+│   ├── hooks/
+│   │   ├── useDashboardData.ts
+│   │   ├── useApi.ts
+│   │   └── useLocalStorage.ts
+│   ├── types/
+│   │   ├── api.ts
+│   │   ├── charts.ts
+│   │   └── dashboard.ts
+│   ├── services/
+│   │   ├── api.ts
+│   │   └── dataFormatters.ts
+│   ├── pages/
+│   │   ├── Dashboard.tsx
+│   │   ├── SalesReport.tsx
+│   │   └── Analytics.tsx
+│   ├── utils/
+│   │   ├── constants.ts
+│   │   ├── formatters.ts
+│   │   └── validators.ts
+│   ├── styles/
+│   │   ├── theme.ts
+│   │   └── global.css
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── vite-env.d.ts
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+└── README.md
+🎨 UI/UX Specifications
+Dashboard Layout
+text
+┌─────────────────────────────────────────────────┐
+│ Header - Logo, Project Name, User Profile       │
+├───────────────┬─────────────────────────────────┤
+│ Sidebar       │ Main Content Area               │
+│ - Navigation  │ ┌─────────────┐ ┌─────────────┐ │
+│ - Quick Filters│ │ KPI Card 1  │ │ KPI Card 2  │ │
+│               │ └─────────────┘ └─────────────┘ │
+│               │ ┌─────────────────────────────┐ │
+│               │ │         Main Chart          │ │
+│               │ └─────────────────────────────┘ │
+│               │ ┌─────────────┐ ┌─────────────┐ │
+│               │ │ Chart 1     │ │ Chart 2     │ │
+│               │ └─────────────┘ └─────────────┘ │
+└───────────────┴─────────────────────────────────┘
+Required Components & Features
+1. KPI Cards (4-6 cards showing key metrics)
+Total Revenue
+
+Growth Rate (%)
+
+Average Order Value
+
+Customer Count
+
+Regional Performance
+
+Conversion Rate
+
+2. Chart Types
+Line Chart: Revenue trends over time
+
+Bar Chart: Category performance
+
+Pie Chart: Market share distribution
+
+Area Chart: Cumulative metrics
+
+3. Interactive Filters
+Date Range Picker (Last 7 days, 30 days, 90 days, Custom)
+
+Category/Region Selector
+
+Metric Toggle (Revenue vs Units vs Growth)
+
+Real-time search/filter
+
+4. Responsive Grid
+Desktop: 4-column layout
+
+Tablet: 2-column layout
+
+Mobile: 1-column layout
+
+📊 Data Interface Specifications
+TypeScript Interfaces
+typescript
+// src/types/api.ts
+export interface KPI {
+  id: string;
+  title: string;
+  value: number;
+  change: number;  // percentage change
+  trend: 'up' | 'down' | 'neutral';
+  format: 'currency' | 'percentage' | 'number';
+}
+
+export interface ChartData {
+  date: string;
+  revenue: number;
+  units: number;
+  category: string;
+  region: string;
+}
+
+export interface DashboardResponse {
+  kpis: KPI[];
+  chartData: ChartData[];
+  timeRange: {
+    start: string;
+    end: string;
+  };
+  summary: {
+    totalRevenue: number;
+    averageOrderValue: number;
+    growthRate: number;
+  };
+}
+
+export interface FilterParams {
+  startDate: string;
+  endDate: string;
+  category?: string;
+  region?: string;
+  metric: 'revenue' | 'units' | 'growth';
+}
+API Service Structure
+typescript
+// src/services/api.ts
+const API_BASE_URL = 'http://localhost:5000/api';
+
+export const dashboardAPI = {
+  getKPIs: (filters: FilterParams): Promise<KPI[]> => {},
+  getChartData: (filters: FilterParams): Promise<ChartData[]> => {},
+  getSummary: (filters: FilterParams): Promise<DashboardSummary> => {},
+  exportReport: (filters: FilterParams): Promise<Blob> => {}
+};
+🔧 Component Specifications
+1. Main Dashboard Component
+tsx
+// src/pages/Dashboard.tsx
+const Dashboard: React.FC = () => {
+  const [filters, setFilters] = useState<FilterParams>(defaultFilters);
+  const { data, isLoading, error } = useDashboardData(filters);
+  
+  return (
+    <MainLayout>
+      <PageHeader title="Business Dashboard" />
+      <FilterPanel filters={filters} onFilterChange={setFilters} />
+      
+      {isLoading && <LoadingSpinner />}
+      {error && <ErrorState message={error.message} />}
+      {data && (
+        <>
+          <KpiGrid kpis={data.kpis} />
+          <ChartGrid data={data.chartData} filters={filters} />
+        </>
+      )}
+    </MainLayout>
+  );
+};
+2. Custom Hooks
+tsx
+// src/hooks/useDashboardData.ts
+export const useDashboardData = (filters: FilterParams) => {
+  return useQuery({
+    queryKey: ['dashboard', filters],
+    queryFn: () => fetchDashboardData(filters),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+3. Chart Components
+tsx
+// src/components/charts/LineChart.tsx
+interface LineChartProps {
+  data: ChartData[];
+  metric: 'revenue' | 'units';
+  height?: number;
+}
+
+const LineChart: React.FC<LineChartProps> = ({ data, metric, height = 300 }) => {
+  // Recharts implementation
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <LineChart data={formattedData}>
+        <XAxis dataKey="date" />
+        <YAxis />
+        <Tooltip />
+        <Line type="monotone" dataKey={metric} stroke="#8884d8" />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
+🎯 Key Features to Implement
+Must-Have Features
+Real-time data updates (polling every 30 seconds)
+
+Error boundaries for graceful failure
+
+Loading skeletons for better UX
+
+Responsive design for all screen sizes
+
+TypeScript strict mode for type safety
+
+API error handling with retry logic
+
+Nice-to-Have Features
+Data export (PDF/CSV)
+
+Theme toggle (light/dark mode)
+
+Print-friendly views
+
+Data refresh indicators
+
+Offline capability with cached data
+
+🚀 Development Setup Instructions
+Initial Setup
+bash
+# Create project with Vite
+npm create vite@latest dashboard-frontend -- --template react-ts
+
+cd dashboard-frontend
+
+# Install dependencies
+npm install axios recharts @mui/material @emotion/react @emotion/styled
+npm install @tanstack/react-query date-fns
+npm install -D @types/react @types/react-dom eslint prettier
+
+# Start development server
+npm run dev
+Environment Configuration
+env
+# .env.development
+VITE_API_BASE_URL=http://localhost:5000/api
+VITE_APP_TITLE="Business Intelligence Dashboard"
+Build Configuration (vite.config.ts)
+typescript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 3000,
+    proxy: {
+      '/api': 'http://localhost:5000'
+    }
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: true
+  }
+})
+📝 Success Criteria
+The frontend will be considered successful when:
+
+✅ All components render without errors
+
+✅ Data loads and displays correctly from backend
+
+✅ Filters update the displayed data in real-time
+
+✅ Responsive design works on all screen sizes
+
+✅ Error states are handled gracefully
+
+✅ TypeScript shows no type errors
+
+✅ Performance is smooth (60fps)
+
+✅ Code is clean and well-documented
+
+🎨 Design System Guidelines
+Color Palette
+Primary: #1976d2 (Material UI Blue)
+
+Success: #2e7d32 (Green)
+
+Warning: #ed6c02 (Orange)
+
+Error: #d32f2f (Red)
+
+Typography Scale
+H1: 2.5rem
+
+H2: 2rem
+
+H3: 1.75rem
+
+Body: 1rem
+
+Small: 0.875rem
+
+Spacing
+Unit: 8px
+
+Small: 16px
+
+Medium: 24px
+
+Large: 32px
+
+Ready to start building! This gives your frontend developer a complete blueprint. When you're ready, we'll dive into the Python backend specifications next.

@@ -1,0 +1,511 @@
+Backend Requirements & Specifications
+🎯 Backend Overview
+Role: Data Processing, Business Logic & API Layer
+Tech Stack: Python + FastAPI + SQLite/PostgreSQL + Pandas
+
+📋 Backend Responsibilities
+Core Functions
+Data Processing - Clean, transform, and analyze raw data
+
+API Endpoints - Serve structured data to frontend
+
+Business Logic - Calculate metrics, trends, and insights
+
+Database Management - Store and retrieve data efficiently
+
+AI/ML Integration - Generate intelligent insights (optional)
+
+🛠 Technical Stack Requirements
+Required Dependencies
+python
+# requirements.txt
+fastapi==0.104.1
+uvicorn==0.24.0
+pandas==2.1.3
+numpy==1.25.2
+sqlalchemy==2.0.23
+pydantic==2.5.0
+python-multipart==0.0.6
+python-jose==3.3.0
+passlib==1.7.4
+openai==1.3.0  # For AI insights (optional)
+scikit-learn==1.3.2  # For ML analysis (optional)
+Development Dependencies
+python
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+black==23.11.0
+flake8==6.1.0
+📁 Project Structure
+text
+dashboard-backend/
+├── app/
+│   ├── __init__.py
+│   ├── main.py                 # FastAPI app instance
+│   ├── config.py              # Configuration settings
+│   ├── database/
+│   │   ├── __init__.py
+│   │   ├── database.py        # Database connection
+│   │   └── models.py          # SQLAlchemy models
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── routes/
+│   │   │   ├── __init__.py
+│   │   │   ├── dashboard.py   # Main dashboard endpoints
+│   │   │   ├── analytics.py   # Advanced analytics
+│   │   │   └── ai_insights.py # AI-powered insights
+│   │   └── dependencies.py    # Auth & dependency injection
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── data_processor.py  # Pandas data processing
+│   │   ├── analytics_engine.py # Business logic
+│   │   ├── ai_service.py      # OpenAI integration
+│   │   └── report_generator.py # PDF/CSV reports
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── schemas.py         # Pydantic models
+│   │   └── requests.py        # Request models
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── data_loader.py     # Sample data generation
+│   │   ├── formatters.py      # Data formatting
+│   │   └── constants.py       # App constants
+│   └── tests/
+│       ├── __init__.py
+│       ├── test_api.py
+│       └── test_services.py
+├── data/
+│   ├── sample_data.db         # SQLite database
+│   └── generated_data.csv     # Sample dataset
+├── alembic/                   # Database migrations
+├── requirements.txt
+├── .env.example
+└── README.md
+🗄️ Database Schema
+SQLAlchemy Models
+python
+# app/database/models.py
+from sqlalchemy import Column, Integer, String, Float, DateTime, JSON
+
+class SalesData(Base):
+    __tablename__ = "sales_data"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(DateTime, nullable=False)
+    revenue = Column(Float, nullable=False)
+    units_sold = Column(Integer, nullable=False)
+    product_category = Column(String(100), nullable=False)
+    region = Column(String(50), nullable=False)
+    customer_id = Column(String(50))
+    order_id = Column(String(50), unique=True)
+    
+class KPIHistory(Base):
+    __tablename__ = "kpi_history"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    timestamp = Column(DateTime, nullable=False)
+    kpi_name = Column(String(100), nullable=False)
+    kpi_value = Column(Float, nullable=False)
+    period = Column(String(20))  # daily, weekly, monthly
+📊 Pydantic Schemas (Data Models)
+python
+# app/models/schemas.py
+from pydantic import BaseModel
+from datetime import datetime
+from typing import List, Optional
+
+class KPISchema(BaseModel):
+    id: str
+    title: str
+    value: float
+    change: float
+    trend: str
+    format: str
+    
+class ChartDataSchema(BaseModel):
+    date: str
+    revenue: float
+    units: int
+    category: str
+    region: str
+    
+class DashboardResponse(BaseModel):
+    kpis: List[KPISchema]
+    chart_data: List[ChartDataSchema]
+    time_range: dict
+    summary: dict
+    
+class FilterParams(BaseModel):
+    start_date: str
+    end_date: str
+    category: Optional[str] = None
+    region: Optional[str] = None
+    metric: str = "revenue"
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "start_date": "2024-01-01",
+                "end_date": "2024-01-31",
+                "category": "electronics",
+                "region": "north",
+                "metric": "revenue"
+            }
+        }
+🚀 API Endpoints Specification
+1. Main Dashboard Endpoints
+python
+# app/api/routes/dashboard.py
+@router.get("/kpis", response_model=List[KPISchema])
+async def get_kpis(
+    start_date: str,
+    end_date: str,
+    category: Optional[str] = None,
+    region: Optional[str] = None
+):
+    """Get Key Performance Indicators"""
+    pass
+
+@router.get("/chart-data", response_model=List[ChartDataSchema])
+async def get_chart_data(
+    filters: FilterParams = Depends()
+):
+    """Get data for charts and visualizations"""
+    pass
+
+@router.get("/summary")
+async def get_dashboard_summary(
+    start_date: str,
+    end_date: str
+):
+    """Get overall dashboard summary"""
+    pass
+2. Analytics Endpoints
+python
+# app/api/routes/analytics.py
+@router.get("/trends")
+async def get_business_trends(
+    period: str = "30d",
+    metric: str = "revenue"
+):
+    """Analyze business trends and patterns"""
+    pass
+
+@router.get("/forecast")
+async def get_revenue_forecast(
+    periods: int = 30
+):
+    """Generate revenue forecasts"""
+    pass
+
+@router.get("/comparison")
+async def get_period_comparison(
+    current_start: str,
+    current_end: str,
+    previous_start: str,
+    previous_end: str
+):
+    """Compare two time periods"""
+    pass
+3. AI Insights Endpoints
+python
+# app/api/routes/ai_insights.py
+@router.get("/ai-insights")
+async def get_ai_insights(
+    start_date: str,
+    end_date: str
+):
+    """Get AI-generated business insights"""
+    pass
+
+@router.get("/anomalies")
+async def detect_anomalies(
+    start_date: str,
+    end_date: str
+):
+    """Detect unusual patterns in data"""
+    pass
+🔧 Service Layer Specifications
+1. Data Processing Service
+python
+# app/services/data_processor.py
+class DataProcessor:
+    def __init__(self):
+        self.df = None
+        
+    def load_data(self, filters: dict) -> pd.DataFrame:
+        """Load and filter data based on criteria"""
+        pass
+        
+    def calculate_kpis(self, df: pd.DataFrame) -> List[dict]:
+        """Calculate all KPIs from data"""
+        kpis = [
+            self._calculate_total_revenue(df),
+            self._calculate_growth_rate(df),
+            self._calculate_aov(df),
+            self._calculate_conversion_rate(df)
+        ]
+        return kpis
+        
+    def _calculate_total_revenue(self, df: pd.DataFrame) -> float:
+        return df['revenue'].sum()
+        
+    def _calculate_growth_rate(self, df: pd.DataFrame) -> float:
+        # Calculate month-over-month growth
+        pass
+        
+    def prepare_chart_data(self, df: pd.DataFrame) -> List[dict]:
+        """Format data for frontend charts"""
+        pass
+2. Analytics Engine
+python
+# app/services/analytics_engine.py
+class AnalyticsEngine:
+    def analyze_trends(self, df: pd.DataFrame) -> dict:
+        """Analyze business trends"""
+        trends = {
+            "seasonality": self._detect_seasonality(df),
+            "correlations": self._find_correlations(df),
+            "top_performers": self._identify_top_performers(df)
+        }
+        return trends
+        
+    def generate_forecast(self, df: pd.DataFrame, periods: int) -> dict:
+        """Generate revenue forecast using simple ML"""
+        from sklearn.linear_model import LinearRegression
+        # Implementation here
+        pass
+3. AI Service (Optional)
+python
+# app/services/ai_service.py
+class AIService:
+    def __init__(self):
+        self.client = OpenAI()  # If using OpenAI API
+        
+    def generate_insights(self, data_summary: dict) -> str:
+        """Generate human-readable insights from data"""
+        prompt = self._build_insight_prompt(data_summary)
+        response = self.client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
+        
+    def _build_insight_prompt(self, summary: dict) -> str:
+        return f"""
+        Analyze this business data and provide 3 key insights:
+        Total Revenue: ${summary['total_revenue']:,.2f}
+        Growth Rate: {summary['growth_rate']:.1f}%
+        Top Category: {summary['top_category']}
+        Regional Performance: {summary['regional_performance']}
+        
+        Provide concise, actionable business insights.
+        """
+📈 Sample Data Generation
+python
+# app/utils/data_loader.py
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+
+def generate_sample_data(records: int = 1000) -> pd.DataFrame:
+    """Generate realistic sample sales data"""
+    np.random.seed(42)
+    
+    dates = pd.date_range(
+        start='2023-01-01',
+        end='2024-01-01',
+        freq='D'
+    )
+    
+    categories = ['Electronics', 'Clothing', 'Home Goods', 'Books', 'Sports']
+    regions = ['North', 'South', 'East', 'West']
+    
+    data = []
+    for i in range(records):
+        date = np.random.choice(dates)
+        category = np.random.choice(categories, p=[0.3, 0.25, 0.2, 0.15, 0.1])
+        region = np.random.choice(regions)
+        
+        # Realistic revenue based on category
+        base_revenue = {
+            'Electronics': 500, 'Clothing': 80, 'Home Goods': 150, 
+            'Books': 25, 'Sports': 120
+        }[category]
+        
+        revenue = np.random.normal(base_revenue, base_revenue * 0.3)
+        units = max(1, int(revenue / (base_revenue * 0.8)))
+        
+        data.append({
+            'date': date,
+            'revenue': max(10, revenue),
+            'units_sold': units,
+            'product_category': category,
+            'region': region,
+            'order_id': f"ORD{10000 + i}",
+            'customer_id': f"CUST{np.random.randint(1000, 9999)}"
+        })
+    
+    return pd.DataFrame(data)
+⚙️ FastAPI Application Setup
+python
+# app/main.py
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from app.api.routes import dashboard, analytics, ai_insights
+from app.config import settings
+
+app = FastAPI(
+    title="Business Intelligence Dashboard API",
+    description="Backend API for analytics dashboard",
+    version="1.0.0"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # React frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(analytics.router, prefix="/api/analytics", tags=["analytics"])
+app.include_router(ai_insights.router, prefix="/api/ai", tags=["ai-insights"])
+
+@app.get("/")
+async def root():
+    return {"message": "Business Intelligence API", "version": "1.0.0"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "timestamp": datetime.utcnow()}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+🔧 Configuration
+python
+# app/config.py
+from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    app_name: str = "Business Intelligence API"
+    database_url: str = "sqlite:///./data/sample_data.db"
+    openai_api_key: str = None
+    cors_origins: list = ["http://localhost:3000"]
+    
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+🚀 Development Setup
+Installation & Running
+bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Generate sample data
+python -c "from app.utils.data_loader import generate_sample_data; generate_sample_data(5000).to_csv('data/sample_data.csv', index=False)"
+
+# Run the application
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+Environment Variables
+bash
+# .env
+DATABASE_URL=sqlite:///./data/sample_data.db
+OPENAI_API_KEY=your_openai_key_here  # Optional
+CORS_ORIGINS=["http://localhost:3000"]
+📊 API Response Examples
+KPI Endpoint Response
+json
+{
+  "kpis": [
+    {
+      "id": "total_revenue",
+      "title": "Total Revenue",
+      "value": 154320.50,
+      "change": 12.5,
+      "trend": "up",
+      "format": "currency"
+    },
+    {
+      "id": "growth_rate", 
+      "title": "Growth Rate",
+      "value": 8.2,
+      "change": 2.1,
+      "trend": "up",
+      "format": "percentage"
+    }
+  ]
+}
+Chart Data Response
+json
+{
+  "chart_data": [
+    {
+      "date": "2024-01-01",
+      "revenue": 4520.50,
+      "units": 45,
+      "category": "Electronics",
+      "region": "North"
+    }
+  ]
+}
+🧪 Testing
+python
+# app/tests/test_api.py
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_get_kpis():
+    response = client.get("/api/dashboard/kpis?start_date=2024-01-01&end_date=2024-01-31")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) > 0
+
+def test_chart_data():
+    response = client.get("/api/dashboard/chart-data?start_date=2024-01-01&end_date=2024-01-31")
+    assert response.status_code == 200
+🎯 Success Criteria
+The backend will be considered successful when:
+
+✅ All API endpoints return correct data structures
+
+✅ Data processing handles various filter combinations
+
+✅ KPIs are calculated accurately
+
+✅ API responds within 500ms for all endpoints
+
+✅ CORS properly configured for frontend communication
+
+✅ Error handling for invalid parameters
+
+✅ Sample data is realistic and sufficient for demo
+
+✅ Automatic API documentation available at /docs
+
+🔄 Frontend-Backend Integration Points
+Expected Data Flow:
+Frontend sends filter parameters → Backend processes and filters data
+
+Backend returns structured JSON → Frontend renders visualizations
+
+Real-time updates via periodic API calls
+
+Error handling with meaningful status codes
+
+API Base URL: http://localhost:8000
+Now your backend developer has a complete blueprint! They can start building the data processing engine while the frontend team works on the UI components. The two can develop in parallel and integrate via the well-defined API contracts.
