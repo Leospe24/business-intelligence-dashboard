@@ -402,6 +402,17 @@ const App = () => {
       }
     }, [isAuthenticated, handleDataRefresh]); // Dependency updated to handleDataRefresh
 
+    useEffect(() => {
+    // This runs on every filter change *after* the initial login load is complete.
+    // The initialLoadRef.current ensures we don't double-fetch immediately after login.
+    if (isAuthenticated && initialLoadRef.current) {
+        console.log('Filters changed, triggering dashboard data refresh...');
+        // Use the state-managing function to show loading state
+        handleDataRefresh(true); 
+    }
+    // Dependency includes 'filters' to trigger the fetch when they change.
+}, [filters, isAuthenticated, handleDataRefresh]);
+
     // Fix 2: Auto-refresh - use a ref to track the interval
     useEffect(() => {
       // Clear any existing interval
