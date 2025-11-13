@@ -1,5 +1,5 @@
 // frontend/src/App.tsx
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react'; // Add useRef import
 import { format, subDays } from 'date-fns';
 import { LogOut, Settings, Download, Repeat2 } from 'lucide-react';
 import Dashboard from './Dashboard';
@@ -280,6 +280,10 @@ const App = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
     const { toast, triggerToast } = useToast();
+    
+    // Refs for tracking state
+    const initialLoadRef = useRef(false);
+    const refreshIntervalRef = useRef<number | null>(null); // Use number instead of NodeJS.Timeout for broader compatibility
 
     const handleViewChange = useCallback((view: AuthView) => {
         setCurrentView(view);
@@ -313,14 +317,11 @@ const App = () => {
       
       // Try cache first
       const cachedData = localStorage.getItem(cacheKey);
-      if (cachedData) {
+      if (cachedData && !showToast) { // Only use cache for silent refreshes
         const cacheItem = JSON.parse(cachedData);
         // Check if cache is still valid (2 minutes)
         if (Date.now() - cacheItem.timestamp < 2 * 60 * 1000) {
           setDashboardData(cacheItem.data);
-          if (showToast) {
-            triggerToast('info', 'Data loaded from cache');
-          }
           return;
         }
       }
@@ -331,6 +332,8 @@ const App = () => {
         queryParams.append('endDate', filters.endDate);
         if (filters.category) queryParams.append('category', filters.category);
         if (filters.region) queryParams.append('region', filters.region);
+
+        console.log('Fetching dashboard data with params:', Object.fromEntries(queryParams));
 
         const response = await fetch(`${API_BASE_URL}/api/dashboard/data?${queryParams}`, {
           method: 'GET',
@@ -348,11 +351,12 @@ const App = () => {
         }
 
         const data = await response.json();
-        setDashboardData(data.data);
+        console.log('Dashboard data received:', data.data?.length, 'records');
+        setDashboardData(data.data || []);
         
         // Cache the response
         const cacheItem = {
-          data: data.data,
+          data: data.data || [],
           timestamp: Date.now()
         };
         localStorage.setItem(cacheKey, JSON.stringify(cacheItem));
@@ -366,18 +370,44 @@ const App = () => {
         if ((error as Error).message.includes('expired') || (error as Error).message.includes('unauthorized')) {
           handleLogout();
         }
+        // Set empty array on error to prevent loading state hang
+        setDashboardData([]);
       }
     }, [filters, triggerToast, handleLogout]);
 
-    // Auto-refresh for dashboard data
+    // Fix 1: Data loading on authentication
     useEffect(() => {
-        if (isAuthenticated && currentPage === 'dashboard') {
-            const interval = setInterval(() => {
-                loadDashboardData(false); // Silent refresh (no toast)
-            }, 30000); // Refresh every 30 seconds
-            
-            return () => clearInterval(interval);
+      if (isAuthenticated && !initialLoadRef.current) {
+        console.log('User authenticated, loading dashboard data...');
+        initialLoadRef.current = true;
+        loadDashboardData();
+      } else if (!isAuthenticated) {
+        initialLoadRef.current = false;
+        setCurrentView('home');
+      }
+    }, [isAuthenticated, loadDashboardData]);
+
+    // Fix 2: Auto-refresh - use a ref to track the interval
+    useEffect(() => {
+      // Clear any existing interval
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+
+      if (isAuthenticated && currentPage === 'dashboard') {
+        console.log('Setting up auto-refresh for dashboard');
+        refreshIntervalRef.current = window.setInterval(() => {
+          loadDashboardData(false); // Silent refresh (no toast)
+        }, 30000); // Refresh every 30 seconds
+      }
+
+      return () => {
+        if (refreshIntervalRef.current) {
+          console.log('Clearing auto-refresh interval');
+          clearInterval(refreshIntervalRef.current);
+          refreshIntervalRef.current = null;
         }
+      };
     }, [isAuthenticated, currentPage, loadDashboardData]);
 
     useEffect(() => {

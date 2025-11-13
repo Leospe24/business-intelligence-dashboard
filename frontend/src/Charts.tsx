@@ -60,7 +60,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
                 <p className="font-semibold text-gray-700 mb-1">{`Date: ${label}`}</p>
                 {payload.map((p, index: number) => (
                     <p key={index} className={`font-medium ${p.dataKey === 'profit' ? 'text-green-600' : 'text-blue-600'}`}>
-                        {`${p.name}: $${p.value.toLocaleString()}`}
+                        {`${p.name}: GH₵${p.value.toLocaleString()}`} {/* Changed $ to GH₵ */}
                     </p>
                 ))}
             </div>
@@ -77,7 +77,7 @@ const BarChartTooltip = ({ active, payload, label }: BarChartTooltipProps) => {
                 <p className="font-semibold text-gray-700 mb-1">{`Category: ${label}`}</p>
                 {payload.map((p, index: number) => (
                     <p key={index} className={`font-medium ${p.dataKey === 'profit' ? 'text-green-600' : 'text-blue-600'}`}>
-                        {`${p.name}: $${Number(p.value).toLocaleString()}`}
+                        {`${p.name}: GH₵${Number(p.value).toLocaleString()}`} {/* Changed $ to GH₵ */}
                     </p>
                 ))}
             </div>
@@ -105,7 +105,7 @@ export const RevenueProfitChart = ({ data }: ChartProps) => {
                 >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                     <XAxis dataKey="date" tickLine={false} axisLine={{ stroke: '#9ca3af' }} />
-                    <YAxis tickFormatter={(value) => `$${value.toFixed(0)}`} axisLine={false} tickLine={false} />
+                    <YAxis tickFormatter={(value) => `GH₵${value.toFixed(0)}`}  axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend verticalAlign="top" height={36} />
                     
@@ -176,7 +176,7 @@ export const CategoryBarChart = ({ data }: ChartProps) => {
                         height={80}
                     />
                     <YAxis 
-                        tickFormatter={(value) => `$${value.toFixed(0)}`} 
+                        tickFormatter={(value) => `GH₵${value.toFixed(0)}`} 
                         axisLine={false} 
                         tickLine={false} 
                     />

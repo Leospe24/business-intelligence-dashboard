@@ -276,8 +276,8 @@ const Analytics = ({ dashboardData }: AnalyticsProps) => {
                         {analyticsData.trends.categoryBreakdown.slice(0, 5).map((category, index) => (
                           <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                             <td className="px-4 py-2 text-sm font-medium text-gray-900">{category.product_category}</td>
-                            <td className="px-4 py-2 text-sm text-gray-700">${parseFloat(category.total_revenue).toLocaleString()}</td>
-                            <td className="px-4 py-2 text-sm text-gray-700">${parseFloat(category.total_profit).toLocaleString()}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">GH₵{parseFloat(category.total_revenue).toLocaleString()}</td>
+                            <td className="px-4 py-2 text-sm text-gray-700">GH₵{parseFloat(category.total_profit).toLocaleString()}</td>
                             <td className="px-4 py-2 text-sm text-gray-700">{category.transaction_count}</td>
                           </tr>
                         ))}
@@ -293,7 +293,7 @@ const Analytics = ({ dashboardData }: AnalyticsProps) => {
             <div>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Revenue Forecast (Next 30 Days)</h2>
               {isLoading ? (
-                <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6 animate-pulse">
+                <div className="bg-linear-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6 animate-pulse">
                   <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
                   <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -306,7 +306,7 @@ const Analytics = ({ dashboardData }: AnalyticsProps) => {
                   </div>
                 </div>
               ) : analyticsData?.forecast ? (
-                <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6">
+                <div className="bg-linear-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-6">
                   <div className="text-center">
                     <p className="text-blue-800 font-medium text-lg">
                       📈 Forecast Analytics Active
@@ -318,7 +318,7 @@ const Analytics = ({ dashboardData }: AnalyticsProps) => {
                       <div className="bg-white p-3 rounded-lg shadow-sm">
                         <p className="font-semibold text-gray-700">Avg Daily Revenue</p>
                         <p className="text-green-600 font-bold text-lg">
-                          ${(analyticsData.forecast.forecast.reduce((sum, day) => sum + day.forecasted_revenue, 0) / 30).toFixed(0)}
+                          GH₵{(analyticsData.forecast.forecast.reduce((sum, day) => sum + day.forecasted_revenue, 0) / 30).toFixed(0)}
                         </p>
                       </div>
                       <div className="bg-white p-3 rounded-lg shadow-sm">
@@ -346,7 +346,7 @@ const Analytics = ({ dashboardData }: AnalyticsProps) => {
                         {analyticsData.forecast.forecast.slice(0, 3).map((day, index) => (
                           <div key={index} className="bg-white p-2 rounded border">
                             <p className="font-medium">{new Date(day.date).toLocaleDateString()}</p>
-                            <p className="text-green-600">${day.forecasted_revenue.toFixed(0)}</p>
+                            <p className="text-green-600">GH₵{day.forecasted_revenue.toFixed(0)}</p>
                             <p className="text-gray-500">{(day.confidence * 100).toFixed(0)}% confidence</p>
                           </div>
                         ))}

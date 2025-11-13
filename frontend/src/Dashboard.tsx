@@ -1,5 +1,5 @@
 // frontend/src/Dashboard.tsx
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { RevenueProfitChart, CategoryBarChart } from './Charts';
 import LazyChart from './components/LazyChart';
@@ -39,16 +39,17 @@ interface FilterParams {
 
 // Helper function to convert currency string to float
 const parseCurrency = (currencyStr: string): number => {
+    // Remove GH₵ symbol and parse
     return parseFloat(currencyStr.replace(/[^0-9.-]+/g, ""));
 };
 
 // Simple function to format a number as US currency
 const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-GH', {
         style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0,
+        currency: 'GHS',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
     }).format(amount);
 };
 
@@ -77,12 +78,12 @@ const calculateKPIs = (data: DashboardMetric[]): KPI[] => {
     return [
         {
             title: 'Total Revenue',
-            value: formatCurrency(totalRevenue),
+            value: formatCurrency(totalRevenue), // Now returns GH₵ format
             ...getDemoTrend(),
         },
         {
             title: 'Net Profit',
-            value: formatCurrency(totalProfit),
+            value: formatCurrency(totalProfit), // Now returns GH₵ format
             ...getDemoTrend(),
         },
         {
@@ -187,29 +188,35 @@ const Dashboard = ({
     const kpis = useMemo(() => calculateKPIs(liveData), [liveData]);
 
     const handleFilterChange = useCallback((newFilters: FilterParams) => {
-        onFiltersChange(newFilters);
-    }, [onFiltersChange]);
+    console.log('Filters changed:', newFilters);
+    onFiltersChange(newFilters);
+  }, [onFiltersChange]);
+
+  // Add this useEffect to log when data changes
+  useEffect(() => {
+    console.log('Dashboard data updated:', liveData.length, 'records');
+  }, [liveData]);
 
     const kpiCards = useMemo(() => 
         kpis.map((kpi, index) => <KPICard key={index} {...kpi} />)
     , [kpis]);
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-800">
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-                {/* Header with Live Indicator */}
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-900">Business Dashboard</h1>
-                    {!isLoading && liveData.length > 0 && <LiveIndicator />}
-                </div>
+    <div className="min-h-screen bg-gray-50 text-gray-800">
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+            {/* Header with Live Indicator */}
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Business Dashboard</h1>
+                {!isLoading && liveData.length > 0 && <LiveIndicator />}
+            </div>
 
-                {/* Filter Panel with Skeleton */}
-                {isLoading ? (
-                    <SkeletonFilter />
-                ) : (
-                    <FilterPanel filters={filters} onFiltersChange={handleFilterChange} />
-                )}
+                 {/* Filter Panel with Skeleton */}
+            {isLoading ? (
+                <SkeletonFilter />
+            ) : (
+                <FilterPanel filters={filters} onFiltersChange={handleFilterChange} />
+            )}
 
                 {/* 1. KPI Metrics Section with Skeleton */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
