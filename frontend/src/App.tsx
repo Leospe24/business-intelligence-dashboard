@@ -1,5 +1,5 @@
 // frontend/src/App.tsx
-import { useState, useCallback, useEffect, useRef } from 'react'; // Add useRef import
+import { useState, useCallback, useEffect, useRef } from 'react'; 
 import { format, subDays } from 'date-fns';
 import { LogOut, Settings, Download, Repeat2 } from 'lucide-react';
 import Dashboard from './Dashboard';
@@ -45,7 +45,9 @@ const AppHeader = ({
   currentPage: 'dashboard' | 'analytics';
   setCurrentPage: (page: 'dashboard' | 'analytics') => void;
   handleLogout: () => void;
-  handleDataRefresh: () => void;
+  // NOTE: handleDataRefresh signature changed to accept a boolean in App.tsx but 
+  // is simplified here for the component
+  handleDataRefresh: () => void; 
   onExportData: () => void;
   isRefreshing: boolean;
 }) => {
@@ -141,7 +143,8 @@ const AppHeader = ({
       <AdminPanel 
         isVisible={showAdminPanel}
         onClose={() => setShowAdminPanel(false)}
-        onDataUpdate={handleDataRefresh}
+        // Note: handleDataRefresh is used here as a simple callback without args
+        onDataUpdate={() => handleDataRefresh()} 
       />
     </>
   );
@@ -375,17 +378,29 @@ const App = () => {
       }
     }, [filters, triggerToast, handleLogout]);
 
+    // NEW: Function to handle data refresh with proper loading state management
+    // We pass this function's reference to the effects and the header.
+    const handleDataRefresh = useCallback(async (showToast = true) => {
+        setIsRefreshing(true);
+        // Await the data load to ensure setIsRefreshing(false) runs *after* the fetch
+        await loadDashboardData(showToast); 
+        // Stop refreshing immediately after data is loaded (or fails to load).
+        setIsRefreshing(false); 
+    }, [loadDashboardData]);
+
+
     // Fix 1: Data loading on authentication
     useEffect(() => {
       if (isAuthenticated && !initialLoadRef.current) {
         console.log('User authenticated, loading dashboard data...');
         initialLoadRef.current = true;
-        loadDashboardData();
+        // FIX: Use handleDataRefresh to set isRefreshing=true before fetch
+        handleDataRefresh(true); 
       } else if (!isAuthenticated) {
         initialLoadRef.current = false;
         setCurrentView('home');
       }
-    }, [isAuthenticated, loadDashboardData]);
+    }, [isAuthenticated, handleDataRefresh]); // Dependency updated to handleDataRefresh
 
     // Fix 2: Auto-refresh - use a ref to track the interval
     useEffect(() => {
@@ -397,7 +412,8 @@ const App = () => {
       if (isAuthenticated && currentPage === 'dashboard') {
         console.log('Setting up auto-refresh for dashboard');
         refreshIntervalRef.current = window.setInterval(() => {
-          loadDashboardData(false); // Silent refresh (no toast)
+          // FIX: Use handleDataRefresh for silent refresh
+          handleDataRefresh(false); 
         }, 30000); // Refresh every 30 seconds
       }
 
@@ -408,15 +424,9 @@ const App = () => {
           refreshIntervalRef.current = null;
         }
       };
-    }, [isAuthenticated, currentPage, loadDashboardData]);
+    }, [isAuthenticated, currentPage, handleDataRefresh]); // Dependency updated
 
-    useEffect(() => {
-        if (isAuthenticated) {
-            loadDashboardData();
-        } else {
-            setCurrentView('home');
-        }
-    }, [isAuthenticated, loadDashboardData]);
+    // REMOVED THE REDUNDANT useEffect BLOCK (Original lines 351-355)
 
     const handleExportData = useCallback(async () => {
         const token = localStorage.getItem('token');
@@ -492,11 +502,13 @@ const App = () => {
         }
     };
 
-    const handleDataRefresh = useCallback(async () => {
-        setIsRefreshing(true);
-        await loadDashboardData(true);
-        setTimeout(() => setIsRefreshing(false), 1000);
-    }, [loadDashboardData]);
+    // NOTE: AppHeader passes a no-argument function, so we must wrap the new handleDataRefresh
+    // in the prop definition for AppHeader, or simply pass a no-arg function here:
+    const handleRefreshClick = useCallback(() => {
+      // For a button click, we explicitly want a toast.
+      handleDataRefresh(true);
+    }, [handleDataRefresh]);
+
 
     let content;
     const authViews: AuthView[] = ['login', 'register'];
@@ -508,7 +520,7 @@ const App = () => {
                     currentPage={currentPage}
                     setCurrentPage={setCurrentPage}
                     handleLogout={handleLogout}
-                    handleDataRefresh={handleDataRefresh}
+                    handleDataRefresh={handleRefreshClick} // Use the no-arg wrapper for the click handler
                     onExportData={handleExportData}
                     isRefreshing={isRefreshing}
                 />
@@ -519,6 +531,8 @@ const App = () => {
                             dashboardData={dashboardData} 
                             onFiltersChange={setFilters}
                             filters={filters}
+                            // The isLoading prop will now rely on isRefreshing being true during fetch
+                            // and fall back to dashboardData.length === 0 if isRefreshing is somehow missed.
                             isLoading={isRefreshing || dashboardData.length === 0}
                         />
                     )}
