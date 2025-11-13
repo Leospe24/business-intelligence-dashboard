@@ -1,5 +1,5 @@
 // frontend/src/Dashboard.tsx
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ArrowUp, ArrowDown } from 'lucide-react';
 import { RevenueProfitChart, CategoryBarChart } from './Charts';
 import LazyChart from './components/LazyChart';
@@ -39,18 +39,17 @@ interface FilterParams {
 
 // Helper function to convert currency string to float
 const parseCurrency = (currencyStr: string): number => {
-  // Remove any currency symbols and parse
-  return parseFloat(currencyStr.replace(/[^0-9.-]+/g, ""));
+    return parseFloat(currencyStr.replace(/[^0-9.-]+/g, ""));
 };
 
-// Change from USD to Ghana Cedis
+// Simple function to format a number as US currency
 const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-GH', {
-    style: 'currency',
-    currency: 'GHS',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(amount);
 };
 
 const calculateKPIs = (data: DashboardMetric[]): KPI[] => {
@@ -186,27 +185,8 @@ const Dashboard = ({
 }) => {
     const liveData = useRealTimeData(dashboardData);
     const kpis = useMemo(() => calculateKPIs(liveData), [liveData]);
-    const [localLoading, setLocalLoading] = useState(true);
-
-    // Update local loading state when data arrives
-    useEffect(() => {
-        if (liveData.length > 0) {
-            setLocalLoading(false);
-        }
-    }, [liveData]);
-
-    // Reset loading when filters change
-    useEffect(() => {
-        setLocalLoading(true);
-    }, [filters]);
-
-    const isActuallyLoading = isLoading || localLoading;
 
     const handleFilterChange = useCallback((newFilters: FilterParams) => {
-        // Clear cache when filters change
-        const cacheKey = `dashboard_${JSON.stringify(newFilters)}`;
-        localStorage.removeItem(cacheKey);
-        setLocalLoading(true); // Set loading when filters change
         onFiltersChange(newFilters);
     }, [onFiltersChange]);
 
@@ -225,7 +205,7 @@ const Dashboard = ({
                 </div>
 
                 {/* Filter Panel with Skeleton */}
-                {isActuallyLoading ? (
+                {isLoading ? (
                     <SkeletonFilter />
                 ) : (
                     <FilterPanel filters={filters} onFiltersChange={handleFilterChange} />
@@ -233,7 +213,7 @@ const Dashboard = ({
 
                 {/* 1. KPI Metrics Section with Skeleton */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    {isActuallyLoading ? (
+                    {isLoading ? (
                         <>
                             <SkeletonKPI />
                             <SkeletonKPI />
@@ -246,7 +226,7 @@ const Dashboard = ({
 
                 {/* 2. Charts Section with Skeleton */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    {isActuallyLoading ? (
+                    {isLoading ? (
                         <>
                             <SkeletonChart height={400} />
                             <SkeletonChart height={400} />
@@ -270,7 +250,7 @@ const Dashboard = ({
                 
                 {/* 3. Data Table with Skeleton */}
                 <div className="mt-8">
-                    {isActuallyLoading ? (
+                    {isLoading ? (
                         <SkeletonTable rows={5} />
                     ) : (
                         <div className="bg-white p-6 rounded-xl shadow-lg">

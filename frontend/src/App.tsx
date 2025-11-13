@@ -370,26 +370,23 @@ const App = () => {
     }, [filters, triggerToast, handleLogout]);
 
     // Auto-refresh for dashboard data
-useEffect(() => {
-    if (isAuthenticated && currentPage === 'dashboard') {
-        const interval = setInterval(() => {
-            loadDashboardData(false); // Silent refresh (no toast)
-        }, 30000); // Refresh every 30 seconds
-        
-        return () => clearInterval(interval);
-    }
-}, [isAuthenticated, currentPage, loadDashboardData]);
+    useEffect(() => {
+        if (isAuthenticated && currentPage === 'dashboard') {
+            const interval = setInterval(() => {
+                loadDashboardData(false); // Silent refresh (no toast)
+            }, 30000); // Refresh every 30 seconds
+            
+            return () => clearInterval(interval);
+        }
+    }, [isAuthenticated, currentPage, loadDashboardData]);
 
-useEffect(() => {
-    if (isAuthenticated) {
-        // Clear cache and force fresh data load on login
-        const cacheKey = `dashboard_${JSON.stringify(filters)}`;
-        localStorage.removeItem(cacheKey);
-        loadDashboardData();
-    } else {
-        setCurrentView('home');
-    }
-}, [filters, isAuthenticated, loadDashboardData]); // Remove loadDashboardData from dependencies
+    useEffect(() => {
+        if (isAuthenticated) {
+            loadDashboardData();
+        } else {
+            setCurrentView('home');
+        }
+    }, [isAuthenticated, loadDashboardData]);
 
     const handleExportData = useCallback(async () => {
         const token = localStorage.getItem('token');
