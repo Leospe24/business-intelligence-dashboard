@@ -301,15 +301,15 @@ app.get('/api/dashboard/data', authenticateToken, async (req: Request, res: Resp
   try {
     const result = await executeQuery(query, params);
     
-    const formattedData = result.rows.map(row => ({
-      date: row.date,
-      revenue: `$${parseFloat(row.revenue).toFixed(2)}`,
-      profit: `$${parseFloat(row.profit).toFixed(2)}`,
-      cost_of_goods: `$${parseFloat(row.cost_of_goods).toFixed(2)}`,
-      units_sold: row.units_sold,
-      product_category: row.product_category,
-      region: row.region
-    }));
+   const formattedData = result.rows.map(row => ({
+  date: row.date,
+  revenue: parseFloat(row.revenue).toFixed(2),  // Just number
+  profit: parseFloat(row.profit).toFixed(2),    // Just number
+  cost_of_goods: parseFloat(row.cost_of_goods).toFixed(2),  // Just number
+  units_sold: row.units_sold,
+  product_category: row.product_category,
+  region: row.region
+}));
 
     res.json({
       status: 'success',
